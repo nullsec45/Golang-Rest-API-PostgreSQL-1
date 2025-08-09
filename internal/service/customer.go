@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 	"database/sql"
 	"time"
+	"errors"
+    "fmt"
 )
 
 type CustomerService struct {
@@ -60,4 +62,41 @@ func (c CustomerService) Create(ctx context.Context, req dto.CreateCustomerReque
         // tambahkan field sesuai struct CustomerData
     }
     return []dto.CustomerData{createdCustomer}, nil
+}
+
+func (c CustomerService) Update(ctx context.Context, req dto.UpdateCustomerRequest) ([]dto.CustomerData, error) {
+    // Cari data customer
+    exist, err := c.customerRepository.FindById(ctx, req.ID)
+    // fmt.Println(err)
+
+    // Jika customer tidak ditemukan
+    if err != nil && exist.ID == "" {
+        return nil, errors.New("Data customer tidak ditemukan!.")
+    }
+    
+    if err != nil {
+        return nil, err
+    }
+
+    // Update data sesuai request
+    exist.Code = req.Code
+    exist.Name = req.Name
+    exist.UpdatedAt = sql.NullTime{Valid: true, Time: time.Now()}
+
+    // Simpan perubahan
+    err = c.customerRepository.Update(ctx, &exist)
+
+    if err != nil {
+        return nil, err
+    }
+
+    // Buat response DTO
+    updatedCustomer := dto.CustomerData{
+        ID:   exist.ID,
+        Code: exist.Code,
+        Name: exist.Name,
+        // tambahkan field lain sesuai kebutuhan
+    }
+
+    return []dto.CustomerData{updatedCustomer}, nil
 }

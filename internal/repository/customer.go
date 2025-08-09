@@ -6,6 +6,7 @@ import (
     "time"
     "github.com/doug-martin/goqu/v9"
     "github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/domain"
+    // "fmt"
 )
 
 type CustomerRepository struct {
