@@ -1,29 +1,35 @@
 package dto
 
-type Response[T any] struct {
+type ResponseSuccess[T any] struct {
 	Code   int      `json:"code"`	
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
 
-func CreateResponseError(message string) Response [string]{
-	return Response[string]{
+type ResponseError[T any] struct {
+	Code   int      `json:"code"`	
+	Message string      `json:"message"`
+	Error    interface{} `json:"error,omitempty"`
+}
+
+func CreateResponseError(message string) ResponseError [string]{
+	return ResponseError[string]{
 		Code : 400,
 		Message: message,	
-		Data: "",
+		// Error: "",
 	}
 }
 
-func CreateResponseErrorData(message string, data map[string]string) Response [string]{
-	return Response[string]{
+func CreateResponseErrorData(message string, error map[string]string) ResponseError [string]{
+	return ResponseError[string]{
 		Code : 422,
 		Message: message,	
-		Data: data,
+		Error: error,
 	}
 }
 
-func CreateResponseSuccess[T any](message string, data T) Response [T]{
-	return Response[T]{
+func CreateResponseSuccess[T any](message string, data T) ResponseSuccess [T]{
+	return ResponseSuccess[T]{
 		Code : 200,
 		Message: message,	
 		Data: data,
