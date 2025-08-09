@@ -14,6 +14,14 @@ func CreateResponseError(message string) Response [string]{
 	}
 }
 
+func CreateResponseErrorData(message string, data map[string]string) Response [string]{
+	return Response[string]{
+		Code : 422,
+		Message: message,	
+		Data: data,
+	}
+}
+
 func CreateResponseSuccess[T any](message string, data T) Response [T]{
 	return Response[T]{
 		Code : 200,
