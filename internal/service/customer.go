@@ -4,6 +4,9 @@ import (
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/domain"
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/dto"
 	"context"
+	"github.com/google/uuid"
+	"database/sql"
+	"time"
 )
 
 type CustomerService struct {
@@ -34,4 +37,27 @@ func (c CustomerService) Index(ctx context.Context)  ([]dto.CustomerData, error)
 	}
 	
 	return customerData, nil
+}
+
+func (c CustomerService) Create(ctx context.Context, req dto.CreateCustomerRequest) ([]dto.CustomerData, error) {
+    customer := domain.Customer{
+        ID:        uuid.New().String(),
+        Code:      req.Code,
+        Name:      req.Name,
+        CreatedAt: sql.NullTime{Valid: true, Time: time.Now()},
+    }
+
+    err := c.customerRepository.Save(ctx, &customer)
+    if err != nil {
+        return nil, err
+    }
+
+    // Misal ingin mengembalikan customer yang baru dibuat dalam slice:
+    createdCustomer := dto.CustomerData{
+        ID:   customer.ID,
+        Code: customer.Code,
+        Name: customer.Name,
+        // tambahkan field sesuai struct CustomerData
+    }
+    return []dto.CustomerData{createdCustomer}, nil
 }
