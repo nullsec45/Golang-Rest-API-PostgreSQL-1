@@ -3,7 +3,7 @@ package dto
 type ResponseSuccess[T any] struct {
 	Code   int      `json:"code"`	
 	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 type ResponseError[T any] struct {
@@ -28,7 +28,15 @@ func CreateResponseErrorData(message string, error map[string]string) ResponseEr
 	}
 }
 
-func CreateResponseSuccess[T any](message string, data T) ResponseSuccess [T]{
+func CreateResponseSuccess(message string) ResponseSuccess [string]{
+	return ResponseSuccess[string]{
+		Code : 200,
+		Message: message,	
+		// Data: data,
+	}
+}
+
+func CreateResponseSuccessWithData[T any](message string, data T) ResponseSuccess [T]{
 	return ResponseSuccess[T]{
 		Code : 200,
 		Message: message,	
