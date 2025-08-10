@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"time"
 	"errors"
-    "fmt"
+    // "fmt"
 )
 
 type CustomerService struct {
@@ -99,4 +99,36 @@ func (c CustomerService) Update(ctx context.Context, req dto.UpdateCustomerReque
     }
 
     return []dto.CustomerData{updatedCustomer}, nil
+}
+
+func (c CustomerService) Delete (ctx context.Context, id string) error {
+    exist, err := c.customerRepository.FindById(ctx,id)
+
+    if err != nil && exist.ID == "" {
+        return  errors.New("Data customer tidak ditemukan!.")
+    }
+    
+    if err != nil {
+        return err
+    }
+
+    return c.customerRepository.Delete(ctx,id)
+}
+
+func (c CustomerService) Show (ctx context.Context, id string) (dto.CustomerData, error) {
+    exist, err := c.customerRepository.FindById(ctx,id)
+
+    if err != nil && exist.ID == "" {
+        return dto.CustomerData{}, errors.New("Data customer tidak ditemukan!.")
+    }
+    
+    if err != nil {
+        return dto.CustomerData{}, err
+    }
+
+    return dto.CustomerData{
+        ID:exist.ID,
+        Code:exist.Code,
+        Name:exist.Name,
+    }, nil
 }

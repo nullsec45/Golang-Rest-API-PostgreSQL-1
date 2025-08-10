@@ -23,6 +23,8 @@ func NewCustomer(app * fiber.App, customerService domain.CustomerService) {
 	app.Get("/customers", ca.Index)
 	app.Post("/customers", ca.Create)
 	app.Put("/customers/:id", ca.Update)
+	app.Delete("/customers/:id", ca.Delete)
+	app.Get("/customers/:id", ca.Show)
 }
 
 func (ca customerAPI) Index(ctx *fiber.Ctx) error {
@@ -35,7 +37,7 @@ func (ca customerAPI) Index(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(dto.CreateResponseError(err.Error()))
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(dto.CreateResponseSuccess("Successfully Get Data",res))
+	return ctx.Status(fiber.StatusOK).JSON(dto.CreateResponseSuccessWithData("Successfully Get Data",res))
 }
 
 func (ca customerAPI) Create (ctx *fiber.Ctx) error {
@@ -62,7 +64,7 @@ func (ca customerAPI) Create (ctx *fiber.Ctx) error {
 		return ctx.Status(http.StatusInternalServerError).JSON(dto.CreateResponseError(err.Error()))
 	}
 
-	return ctx.Status(http.StatusCreated).JSON(dto.CreateResponseSuccess("Successfully created data.", res))
+	return ctx.Status(http.StatusCreated).JSON(dto.CreateResponseSuccessWithData("Successfully created data.", res))
 }
 
 func (ca customerAPI) Update (ctx *fiber.Ctx) error {
@@ -90,5 +92,33 @@ func (ca customerAPI) Update (ctx *fiber.Ctx) error {
 		return ctx.Status(http.StatusInternalServerError).JSON(dto.CreateResponseError(err.Error()))
 	}
 
-	return ctx.Status(http.StatusCreated).JSON(dto.CreateResponseSuccess("Successfully Updated Data", res))
+	return ctx.Status(fiber.StatusOK).JSON(dto.CreateResponseSuccessWithData("Successfully Updated Data", res))
+}
+
+func (ca customerAPI) Delete (ctx *fiber.Ctx) error {
+	c, cancel := context.WithTimeout(ctx.Context(), 10 * time.Second)
+	defer cancel()
+
+	id := ctx.Params("id")
+	err := ca.customerService.Delete(c, id)
+
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(dto.CreateResponseError(err.Error()))
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(dto.CreateResponseSuccess("Successfully Deleted Data"))
+}
+
+func (ca customerAPI) Show (ctx *fiber.Ctx) error {
+	c, cancel := context.WithTimeout(ctx.Context(), 10 * time.Second)
+	defer cancel()
+
+	id := ctx.Params("id")
+	res, err := ca.customerService.Show(c, id)
+
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(dto.CreateResponseError(err.Error()))
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(dto.CreateResponseSuccessWithData("Successfully Get Data", res))
 }
