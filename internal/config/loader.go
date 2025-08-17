@@ -4,6 +4,7 @@ import(
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strconv"
 )
 
 func Get() * Config{
@@ -12,6 +13,8 @@ func Get() * Config{
 	if err != nil {
 		log.Fatal("Error when loading file configuration", err.Error())
 	}
+
+	expInt, _ := strconv.Atoi(os.Getenv("JWT_EXP"))
 
 	return &Config{
 		Server:Server{
@@ -25,6 +28,10 @@ func Get() * Config{
 			User:os.Getenv("DB_USER"),
 			Pass:os.Getenv("DB_PASS"),
 			Tz:os.Getenv("DB_TZ"),
+		},
+		Jwt: Jwt {
+			Key:os.Getenv("JWT_KEY"),
+			Exp:expInt,
 		},
 	}
 }

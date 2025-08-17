@@ -7,6 +7,9 @@ import (
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/internal/repository"
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/internal/service"
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/internal/api"
+	jwtMid "github.com/gofiber/contrib/jwt"
+	"net/http"
+	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/dto"
 )
 
 func main() {
@@ -17,9 +20,24 @@ func main() {
 
 	app := fiber.New()
 
+	authMiddleware := jwtMid.New(
+		jwtMid.Config{
+			SigningKey:jwtMid.SigningKey{Key:[]byte(cnf.Jwt.Key)},
+			ErrorHandler:func (ctx *fiber.Ctx, err error) error {
+				return ctx.Status(http.StatusUnauthorized).JSON(dto.CreateResponseError("Endpoint perlu token, silahkan login terlebih dahulu."))
+			},
+		},
+	)
+
 	customerRepository := repository.NewCustomer(dbConnection)
+	userRepository := repository.NewUser(dbConnection)
+
 	customerService := service.NewCustomer(customerRepository)
-	api.NewCustomer(app, customerService)
+	authService := service.NewAuth(cnf, userRepository)
+
+	api.NewCustomer(app, customerService, authMiddleware)
+	api.NewAuth(app, authService)
+
 	_ = app.Listen(cnf.Server.Host + ":" + cnf.Server.Port)
 }
 
