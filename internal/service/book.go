@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"database/sql"
 	"time"
-	"errors"
     // "fmt"
 )
 
@@ -47,22 +46,39 @@ func (bs BookService) Index(ctx context.Context)  ([]dto.BookData, error) {
 	return bookData, nil
 }
 
-func (bs BookService) Show (ctx context.Context, id string) (dto.BookData, error) {
+func (bs BookService) Show (ctx context.Context, id string) (dto.BookShowData, error) {
     data, err := bs.bookRepository.FindById(ctx,id)
 
     if err != nil && data.Id == "" {
-        return dto.BookData{}, errors.New("Data buku tidak ditemukan!.")
+        return dto.BookShowData{}, domain.BookNotFound
     }
     
     if err != nil {
-        return dto.BookData{}, err
+        return dto.BookShowData{}, err
     }
 
-    return dto.BookData{
-		Id:   data.Id,
-		Isbn: data.Isbn,
-		Title: data.Title,
-		Description: data.Description,
+	stocks, err := bs.bookStockRepository.FindByBookId(ctx, data.Id)
+
+	if err != nil {
+		return dto.BookShowData{}, err
+	}
+	
+	stocksData := make([]dto.BookStockData, 0)
+	for _, v := range stocks {
+		stocksData = append(stocksData, dto.BookStockData{
+			Code:v.Code,
+			Status:v.Status,
+		})
+	}
+
+    return dto.BookShowData{
+		BookData:dto.BookData{
+			Id:   data.Id,
+			Isbn: data.Isbn,
+			Title: data.Title,
+			Description: data.Description,
+		},
+		Stocks:stocksData,
     }, nil
 }
 
@@ -84,7 +100,7 @@ func (bs BookService) Update(ctx context.Context, req dto.UpdateBookRequest) err
 
     // Jika book tidak ditemukan
     if err != nil && exist.Id == "" {
-        return  errors.New("Data buku tidak ditemukan!.")
+        return  domain.BookNotFound
     }
     
     if err != nil {
@@ -103,7 +119,7 @@ func (bs BookService) Delete (ctx context.Context, id string) error {
     exist, err := bs.bookRepository.FindById(ctx,id)
 
     if err != nil && exist.Id == "" {
-        return  errors.New("Data buku tidak ditemukan!.")
+        return  domain.BookNotFound
     }
     
     if err != nil {
