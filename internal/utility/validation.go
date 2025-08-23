@@ -22,6 +22,10 @@ func TranslateTag(fd validator.FieldError) string {
 	switch fd.ActualTag(){
 	case "required" :
 		return fmt.Sprintf("Field %s wajib diisi", strings.ToLower(fd.StructField()))
+	case "min" :
+		return fmt.Sprintf("Field %s size minimal", strings.ToLower(fd.StructField()), fd.Param())
+	case "unique" :
+		return fmt.Sprintf("Field %s harus unique", strings.ToLower(fd.StructField()))
 	}
 
 	return "validasi gagal"
