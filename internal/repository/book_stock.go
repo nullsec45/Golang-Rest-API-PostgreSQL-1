@@ -57,7 +57,7 @@ func (br *BookStockRepository) DeleteByBookId(ctx context.Context, id string) er
 
 func (br *BookStockRepository) DeleteByCodes(ctx context.Context, codes []string) error {
 	executor := br.db.Delete("book_stocks").
-        Where(goqu.C("id").In(codes)).
+        Where(goqu.C("code").In(codes)).
         Executor()
     _, err := executor.ExecContext(ctx)
     return err
