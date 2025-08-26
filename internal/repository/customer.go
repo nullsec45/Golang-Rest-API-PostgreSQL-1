@@ -37,6 +37,17 @@ func (cr *CustomerRepository) FindById(ctx context.Context, id string) (result d
     return result, err
 }
 
+func (cr *CustomerRepository) FindByIds(ctx context.Context, id []string) (result []domain.Customer, err error) {
+    dataset := cr.db.From("customers").Where(
+        goqu.C("id").Eq(id), 
+        goqu.C("deleted_at").IsNull(),
+        
+    )
+    
+    err = dataset.ScanStructsContext(ctx, &result)
+    return
+}
+
 
 func (cr *CustomerRepository) Save(ctx context.Context, c *domain.Customer) error {
     executor := cr.db.Insert("customers").Rows(c).Executor()
