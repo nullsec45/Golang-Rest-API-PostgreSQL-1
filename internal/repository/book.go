@@ -36,6 +36,16 @@ func (br *BookRepository) FindById(ctx context.Context, id string) (result domai
     return result, err
 }
 
+func (cr *BookRepository) FindByIds(ctx context.Context, id []string) (result []domain.Book, err error) {
+    dataset := cr.db.From("books").Where(
+        goqu.C("id").Eq(id), 
+        goqu.C("deleted_at").IsNull(),
+    )
+
+    err = dataset.ScanStructsContext(ctx, &result)
+    return
+}
+
 
 func (br *BookRepository) Save(ctx context.Context, b *domain.Book) error {
     executor := br.db.Insert("books").Rows(b).Executor()
