@@ -33,13 +33,13 @@ func (j JournalRepository) Find(ctx context.Context, se domain.JournalSearch) (r
 }
 
 func (j JournalRepository) FindById(ctx context.Context, id string) (result domain.Journal, err error) {
-	dataset := j.db.From("journals").Where(goqu.C("deleted_at").IsNull(), goqu.C("id").Eq(id))
+	dataset := j.db.From("journals").Where(goqu.C("id").Eq(id))
 	_, err = dataset.ScanStructContext(ctx, &result)
 	return
 }
 
 func (j JournalRepository) Save (ctx context.Context, journal *domain.Journal) error {
-	executor := j.db.Insert("journals").Executor()
+	executor := j.db.Insert("journals").Rows(journal).Executor()
 	_, err := executor.ExecContext(ctx)
 	return err
 }
