@@ -25,7 +25,7 @@ func (br *BookStockRepository) FindByBookId(ctx context.Context, id string) (res
 
 func (br *BookStockRepository) FindByBookAndCode(ctx context.Context, id string, code string) (result domain.BookStock, err error) {
     dataset := br.db.From("book_stocks").Where(
-        goqu.C("id").Eq(id), 
+        goqu.C("book_id").Eq(id), 
         goqu.C("code").Eq(code), 
     )
 
