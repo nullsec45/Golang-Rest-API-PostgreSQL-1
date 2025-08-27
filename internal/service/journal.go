@@ -7,6 +7,8 @@ import (
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/dto"
 	"github.com/google/uuid"
 	"database/sql"
+	"fmt"
+	"errors"
 )
 
 type JournalService struct {
@@ -106,12 +108,18 @@ func (j JournalService) Create (ctx context.Context, req dto.CreateJournalReques
 
 	stock, err := j.bookStockRepository.FindByBookAndCode(ctx, book.Id, req.BookStock)
 
+	fmt.Println(err)
+
 	if err != nil {
 		return err
 	}
 
 	if stock.Code == "" {
 		return domain.BookNotFound
+	}
+
+	if stock.Status != domain.BOOK_STOCK_STATUS_AVAILABLE {
+		return errors.New("stock buku sudah dipinjam sebelumnya")
 	}
 
 	journal := domain.Journal{
@@ -132,9 +140,36 @@ func (j JournalService) Create (ctx context.Context, req dto.CreateJournalReques
 	stock.Status=domain.BOOK_STOCK_STATUS_BORROWED
 	stock.BorrowedAt=journal.BorrowedAt
 	stock.BorrowerId=sql.NullString{Valid:true, String:journal.CustomerId}
-	return j.bookStockRepository.Save(ctx, []domain.BookStock{stock})
+	return j.bookStockRepository.Update(ctx, &stock)
 }
 
 func (j JournalService) Return (ctx context.Context, req dto.ReturnJournalRequest) error {
-	return nil
+	journal, err := j.journalRepository.FindById(ctx, req.JournalId)
+	if err != nil {
+		return err
+	}
+
+	if journal.Id == "" {
+		return domain.JournalNotFound
+	}
+
+	stock, err := j.bookStockRepository.FindByBookAndCode(ctx,journal.BookId, journal.StockCode)
+
+	if err != nil {
+		return err
+	}
+
+	if stock.Code != "" {
+		stock.Status=domain.BOOK_STOCK_STATUS_AVAILABLE
+		stock.BorrowerId = sql.NullString{Valid:false}
+		stock.BorrowedAt = sql.NullTime{Valid:false}
+		err = j.bookStockRepository.Update(ctx, &stock)
+		if err != nil {
+			return err
+		}
+	}
+
+	journal.Status=domain.JOURNAL_STATUS_COMPLETED
+	journal.ReturnedAt=sql.NullTime{Valid:true, Time:time.Now()}
+	return j.journalRepository.Update(ctx, &journal)
 }
