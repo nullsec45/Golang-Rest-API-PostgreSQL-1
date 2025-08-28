@@ -44,11 +44,11 @@ func main() {
 	mediaService := service.NewMedia(cnf, mediaRepository)
 
 	api.NewCustomer(app, customerService, authMiddleware)
-	api.NewAuth(app, authService)
 	api.NewBook(app, bookService, authMiddleware)
 	api.NewBookStock(app, bookStockService, authMiddleware)
 	api.NewJournal(app, journalService, authMiddleware)
 	api.NewMedia(app, cnf, mediaService, authMiddleware)
+	api.NewAuth(app, authService)
 
 	_ = app.Listen(cnf.Server.Host + ":" + cnf.Server.Port)
 }

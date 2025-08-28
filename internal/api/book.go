@@ -24,11 +24,13 @@ func NewBook(
 		bookService: bookService,
 	}
 
-	app.Get("/books", authMiddleware, ba.Index)
-	app.Post("/books", authMiddleware, ba.Create)
-	app.Put("/books/:id", authMiddleware, ba.Update)
-	app.Delete("/books/:id", authMiddleware, ba.Delete)
-	app.Get("/books/:id", authMiddleware, ba.Show)
+	book := app.Group("/books", authMiddleware)
+
+	book.Get("", ba.Index)
+	book.Post("", ba.Create)
+	book.Put(":id", ba.Update)
+	book.Delete(":id", ba.Delete)
+	book.Get(":id", ba.Show)
 }
 
 func (ba BookAPI) Index(ctx *fiber.Ctx) error {

@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/domain"
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/dto"
+	"fmt"
 )
 
 type AuthApi struct {
@@ -21,10 +22,11 @@ func NewAuth(
 		authService : authService,
 	}
 
-	app.Post("/auth", api.Login)
+	app.Post("/auth/login", api.Login)
 }
 
 func (api AuthApi) Login (ctx *fiber.Ctx) error {
+	fmt.Println("Auth Login Function Called")
 	c, cancel := context.WithTimeout(ctx.Context(), 10 * time.Second)
 	defer cancel()
 
@@ -37,5 +39,6 @@ func (api AuthApi) Login (ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(dto.CreateResponseError(err.Error()))
 	}
+	
 	return ctx.Status(http.StatusOK).JSON(dto.CreateResponseSuccessWithData("Successfully login.", res))
 }
