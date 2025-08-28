@@ -16,6 +16,7 @@ type JournalService struct {
 	bookRepository domain.BookRepository
 	bookStockRepository domain.BookStockRepository
 	customerRepository domain.CustomerRepository
+	chargeRepository domain.ChargeRepository
 }
 
 func NewJournal(
@@ -23,12 +24,14 @@ func NewJournal(
 		bookRepository domain.BookRepository,
 		bookStockRepository domain.BookStockRepository,
 		customerRepository domain.CustomerRepository, 
+		chargeRepository domain.ChargeRepository,
 	) domain.JournalService {
 		return &JournalService{
 			journalRepository:journalRepository,
 			bookRepository:bookRepository,
 			bookStockRepository:bookStockRepository,
 			customerRepository:customerRepository,
+			chargeRepository:chargeRepository,
 		}
 	}
 
@@ -128,6 +131,7 @@ func (j JournalService) Create (ctx context.Context, req dto.CreateJournalReques
 		StockCode:req.BookStock,
 		CustomerId:req.CustomerId,
 		Status:domain.JOURNAL_STATUS_IN_PROGRESS,
+		DueAt:sql.NullTime{Valid:true, Time:time.Now().Add(7 * 24 * time.Hour)},
 		BorrowedAt:sql.NullTime{Valid:true, Time:time.Now()},
 	}
 
@@ -171,5 +175,26 @@ func (j JournalService) Return (ctx context.Context, req dto.ReturnJournalReques
 
 	journal.Status=domain.JOURNAL_STATUS_COMPLETED
 	journal.ReturnedAt=sql.NullTime{Valid:true, Time:time.Now()}
-	return j.journalRepository.Update(ctx, &journal)
+	err = j.journalRepository.Update(ctx, &journal)
+
+	if err != nil {
+		return err
+	}
+
+	hoursLate := time.Now().Sub(journal.DueAt.Time).Hours()
+	if hoursLate > 24 {
+		daysLate := int(hoursLate / 24)
+		charge := domain.Charge{
+			Id:uuid.NewString(),
+			JournalId:journal.Id,
+			DaysLate:daysLate,
+			DailyLateFee:5000,
+			Total: 5000 * daysLate,
+			UserId: req.UserId,
+		}
+
+		err = j.chargeRepository.Save(ctx, &charge)
+	}
+
+	return err
 }

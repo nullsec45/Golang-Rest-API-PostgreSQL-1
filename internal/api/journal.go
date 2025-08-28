@@ -8,6 +8,8 @@ import (
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/domain"
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/internal/utility"
 	"github.com/nullsec45/Golang-Rest-API-PostgreSQL-1/dto"
+	"github.com/golang-jwt/jwt/v5"
+
 )
 
 type JournalAPI struct {
@@ -73,9 +75,11 @@ func (ja JournalAPI) Update (ctx *fiber.Ctx) error {
 	defer cancel()
 
 	id := ctx.Params("id")
+	claim := ctx.Locals("user").(*jwt.Token).Claims.(jwt.MapClaims)
 
 	err :=	ja.journalService.Return(c, dto.ReturnJournalRequest{
 		JournalId:id,
+		UserId:claim["id"].(string),
 	}) 
 
 	if err != nil {
